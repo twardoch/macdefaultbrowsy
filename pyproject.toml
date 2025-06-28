@@ -37,47 +37,47 @@ Source = "https://github.com/twardoch/macdefaultbrowsy"
 
 [project.optional-dependencies]
 dev = [
-"pre-commit> = 4.1.0",
-"ruff> = 0.9.7",
-"mypy> = 1.15.0",
-"absolufy-imports> = 0.3.1",
-"pyupgrade> = 3.19.1",
-"isort> = 6.0.1"
+"pre-commit>=4.1.0",
+"ruff>=0.9.7",
+"mypy>=1.15.0",
+"absolufy-imports>=0.3.1",
+"pyupgrade>=3.19.1",
+"isort>=6.0.1"
 ]
 test = [
-"pytest> = 8.3.4",
-"pytest-cov> = 6.0.0",
-"pytest-xdist> = 3.6.1",
-"pytest-benchmark[histogram]> = 5.1.0",
-"pytest-asyncio> = 0.25.3",
-"coverage[toml]> = 7.6.12"
+"pytest>=8.3.4",
+"pytest-cov>=6.0.0",
+"pytest-xdist>=3.6.1",
+"pytest-benchmark[histogram]>=5.1.0",
+"pytest-asyncio>=0.25.3",
+"coverage[toml]>=7.6.12"
 ]
 docs = [
-"sphinx> = 7.2.6",
-"sphinx-rtd-theme> = 2.0.0",
-"sphinx-autodoc-typehints> = 2.0.0",
-"myst-parser> = 3.0.0"
+"sphinx>=7.2.6",
+"sphinx-rtd-theme>=2.0.0",
+"sphinx-autodoc-typehints>=2.0.0",
+"myst-parser>=3.0.0"
 ]
 all = [
-"myst-parser> = 3.0.0",
-"sphinx-autodoc-typehints> = 2.0.0",
-"sphinx-rtd-theme> = 2.0.0",
-"sphinx> = 7.2.6",
-"absolufy-imports> = 0.3.1",
-"coverage[toml]> = 7.6.12",
+"myst-parser>=3.0.0",
+"sphinx-autodoc-typehints>=2.0.0",
+"sphinx-rtd-theme>=2.0.0",
+"sphinx>=7.2.6",
+"absolufy-imports>=0.3.1",
+"coverage[toml]>=7.6.12",
 "fire",
-"isort> = 6.0.1",
+"isort>=6.0.1",
 "loguru",
-"mypy> = 1.15.0",
-"pre-commit> = 4.1.0",
+"mypy>=1.15.0",
+"pre-commit>=4.1.0",
 "pyobjc-framework-LaunchServices",
-"pytest-asyncio> = 0.25.3",
-"pytest-benchmark[histogram]> = 5.1.0",
-"pytest-cov> = 6.0.0",
-"pytest-xdist> = 3.6.1",
-"pytest> = 8.3.4",
-"pyupgrade> = 3.19.1",
-"ruff> = 0.9.7"
+"pytest-asyncio>=0.25.3",
+"pytest-benchmark[histogram]>=5.1.0",
+"pytest-cov>=6.0.0",
+"pytest-xdist>=3.6.1",
+"pytest>=8.3.4",
+"pyupgrade>=3.19.1",
+"ruff>=0.9.7"
 ]
 
 
