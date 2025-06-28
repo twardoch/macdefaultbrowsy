@@ -1,11 +1,58 @@
+# this_file: package.toml
 # Package configuration
 [package]
+name = "macdefaultbrowsy"
+description = "A Python port of macdefaultbrowser to manage the default web browser on macOS."
+version = "0.1.0"
+author = "Your Name"
+email = "your.email@example.com"
+license = "MIT"
+python_requires = ">=3.8"
+keywords = ["macos", "browser", "default", "cli", "automation"]
+
 include_cli = true        # Include CLI boilerplate
 include_logging = true    # Include logging setup
 use_pydantic = true      # Use Pydantic for data validation
 use_rich = true          # Use Rich for terminal output
+use_fire = true          # Use Fire for CLI interface
+
+# Core dependencies from pyproject-OLD.toml
+[dependencies]
+main = [
+    "pyobjc-framework-CoreServices",
+    "fire", 
+    "loguru",
+]
+
+dev = [
+    "pre-commit>=4.1.0",
+    "ruff>=0.9.7", 
+    "mypy>=1.15.0",
+    "pyupgrade>=3.19.1",
+]
+
+test = [
+    "pytest>=8.3.4",
+    "pytest-cov>=6.0.0",
+    "coverage[toml]>=7.6.12",
+]
+
+# Project URLs
+[urls]
+documentation = "https://github.com/twardoch/macdefaultbrowser#readme"
+issues = "https://github.com/twardoch/macdefaultbrowser/issues" 
+source = "https://github.com/twardoch/macdefaultbrowser"
 
 [features]
 mkdocs = false           # Enable MkDocs documentation
 vcs = true              # Initialize Git repository
-github_actions = true   # Add GitHub Actions workflows 
+github_actions = true   # Add GitHub Actions workflows
+hatch = true            # Use Hatchling build system
+type_checking = true    # Enable mypy type checking
+coverage = true         # Enable test coverage
+
+# Tool configurations from pyproject-OLD.toml
+[tools]
+target_python = "py38"
+line_length = 79
+build_backend = "hatchling" 

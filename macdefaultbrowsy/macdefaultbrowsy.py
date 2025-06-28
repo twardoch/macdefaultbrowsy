@@ -49,6 +49,12 @@ def set_default_browser(browser_id: str) -> bool:
         logger.error(f"Browser '{browser_id}' not found.")
         return False
 
+    # Check if the browser is already the default
+    current_browser = read_default_browser()
+    if current_browser == browser_id:
+        logger.info(f"{browser_id} is already the default browser.")
+        return True
+
     bundle_id = browsers[browser_id]
 
     # Start background confirmation BEFORE triggering the dialog
