@@ -1,79 +1,93 @@
-#!/usr/bin/env python3
-"""macdefaultbrowsy: 
+# this_file: macdefaultbrowsy/macdefaultbrowsy.py
+# macdefaultbrowsy/macdefaultbrowsy.py
 
-Created by Adam Twardoch
-"""
-
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
-import logging
-
-__version__ = "0.1.0"
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+import time
+from loguru import logger
+from . import launch_services, dialog_automation
 
 
-@dataclass
-class Config:
-    """Configuration settings for macdefaultbrowsy."""
-    name: str
-    value: Union[str, int, float]
-    options: Optional[Dict[str, Any]] = None
-
-
-def process_data(
-    data: List[Any],
-    config: Optional[Config] = None,
-    *,
-    debug: bool = False
-) -> Dict[str, Any]:
-    """Process the input data according to configuration.
-    
-    Args:
-        data: Input data to process
-        config: Optional configuration settings
-        debug: Enable debug mode
-        
-    Returns:
-        Processed data as a dictionary
-        
-    Raises:
-        ValueError: If input data is invalid
+def _browser_name_from_bundle_id(bundle_id: str) -> str:
     """
-    if debug:
-        logger.setLevel(logging.DEBUG)
-        logger.debug("Debug mode enabled")
-        
-    if not data:
-        raise ValueError("Input data cannot be empty")
-        
-    # TODO: Implement data processing logic
-    result: Dict[str, Any] = {}
-    return result
+    Extracts a user-friendly browser name from a bundle identifier.
+    Example: com.google.Chrome -> chrome
+    """
+    return bundle_id.split(".")[-1].lower()
 
 
-def main() -> None:
-    """Main entry point for macdefaultbrowsy."""
-    try:
-        # Example usage
-        config = Config(
-            name="default",
-            value="test",
-            options={"key": "value"}
-        )
-        result = process_data([], config=config)
-        logger.info("Processing completed: %s", result)
-        
-    except Exception as e:
-        logger.error("An error occurred: %s", str(e))
-        raise
+def _get_available_browsers() -> dict:
+    """
+    Returns dict of available browsers: {browser_name: bundle_id}.
+    """
+    http_handlers = launch_services.get_all_handlers_for_scheme("http") or []
+    https_handlers = launch_services.get_all_handlers_for_scheme("https") or []
+
+    all_handlers = set(http_handlers) & set(https_handlers)
+
+    browsers = {}
+    for handler in all_handlers:
+        name = _browser_name_from_bundle_id(handler)
+        browsers[name] = handler
+
+    return browsers
 
 
-if __name__ == "__main__":
-    main() 
+def read_default_browser() -> str | None:
+    """
+    Returns the name of the current default browser.
+    """
+    handler = launch_services.get_current_handler_for_scheme("http")
+    if handler:
+        return _browser_name_from_bundle_id(handler)
+    return None
+
+
+def set_default_browser(browser_id: str) -> bool:
+    """
+    Sets the default browser with automatic dialog confirmation.
+
+    First checks if the browser is already the default to avoid hanging
+    when no confirmation dialog appears.
+    """
+    browsers = _get_available_browsers()
+    if browser_id not in browsers:
+        logger.error(f"Browser '{browser_id}' not found.")
+        return False
+
+    # Check if the browser is already the default
+    current_browser = read_default_browser()
+    if current_browser == browser_id:
+        logger.info(f"{browser_id} is already the default browser.")
+        return True
+
+    bundle_id = browsers[browser_id]
+
+    # Start background confirmation BEFORE triggering the dialog
+    dialog_thread = dialog_automation.start_dialog_confirmation(browser_id)
+
+    # Small delay to ensure monitor is running
+    time.sleep(0.1)
+
+    http_ok = launch_services.set_default_handler_for_scheme(bundle_id, "http")
+    https_ok = launch_services.set_default_handler_for_scheme(bundle_id, "https")
+
+    if http_ok and https_ok:
+        # Wait for dialog automation thread to complete
+        dialog_thread.join(timeout=10.0)  # Max 10 seconds
+        logger.info(f"Set {browser_id} as default browser.")
+        return True
+
+    return False
+
+
+def list_browsers() -> None:
+    """
+    Lists all available browsers, marking the default with a *.
+    """
+    available_browsers = _get_available_browsers()
+    current_browser = read_default_browser()
+
+    for name in sorted(available_browsers.keys()):
+        if name == current_browser:
+            logger.info(f"* {name}")
+        else:
+            logger.info(f"  {name}")

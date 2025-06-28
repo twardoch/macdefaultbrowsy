@@ -10,7 +10,7 @@ logger.remove()
 logger.add(sys.stderr, format="{message}")
 
 
-def cli(browser_id: Optional[str] = None):
+def cli(browser_id: str | None = None):
     """
     Manages the default web browser on macOS.
 
