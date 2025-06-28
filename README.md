@@ -1,52 +1,15 @@
-# 
+# macdefaultbrowsy
 
-
-
-## Features
-
-- Modern Python packaging with PEP 621 compliance
-- Type hints and runtime type checking
-- Comprehensive test suite and documentation
-- CI/CD ready configuration
+A Python port of the `macdefaultbrowser` tool to manage the default web browser on macOS.
 
 ## Installation
 
 ```bash
-pip install macdefaultbrowsy
+pip install .
 ```
 
 ## Usage
 
-```python
-import macdefaultbrowsy
-```
-
-## Development
-
-This project uses [Hatch](https://hatch.pypa.io/) for development workflow management.
-
-### Setup Development Environment
-
 ```bash
-# Install hatch if you haven't already
-pip install hatch
-
-# Create and activate development environment
-hatch shell
-
-# Run tests
-hatch run test
-
-# Run tests with coverage
-hatch run test-cov
-
-# Run linting
-hatch run lint
-
-# Format code
-hatch run format
-```
-
-## License
-
-MIT License 
+macdefaultbrowsy
+``` 

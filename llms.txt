@@ -1,0 +1,449 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+macdefaultbrowsy/
+  __init__.py
+  __main__.py
+  dialog_automation.py
+  launch_services.py
+  macdefaultbrowsy.py
+macdefaultbrowsy.egg-info/
+  dependency_links.txt
+  entry_points.txt
+  PKG-INFO
+  requires.txt
+  SOURCES.txt
+  top_level.txt
+tests/
+  test_browser_manager.py
+pyproject.toml
+README.md
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="macdefaultbrowsy/__init__.py">
+# ruff: noqa: F401
+# macdefaultbrowsy/__init__.py
+
+"""A Python port of macdefaultbrowser to manage the default web browser on macOS."""
+
+__version__ = "0.1.0"
+</file>
+
+<file path="macdefaultbrowsy/__main__.py">
+# macdefaultbrowsy/__main__.py
+import sys
+import fire
+from loguru import logger
+from typing import Optional
+
+from . import macdefaultbrowsy
+
+logger.remove()
+logger.add(sys.stderr, format="{message}")
+
+
+def cli(browser_id: Optional[str] = None):
+    """
+    Manages the default web browser on macOS.
+
+    :param browser_id: The browser to set as default. If not provided,
+                       lists available browsers.
+    """
+    if browser_id:
+        macdefaultbrowsy.set_default_browser(browser_id)
+    else:
+        macdefaultbrowsy.list_browsers()
+
+
+if __name__ == "__main__":
+    fire.Fire(cli)
+</file>
+
+<file path="macdefaultbrowsy/dialog_automation.py">
+# macdefaultbrowsy/dialog_automation.py
+
+import subprocess
+import time
+from loguru import logger
+
+
+def confirm_dialog():
+    """
+    Automates the confirmation of the system dialog by running a robust,
+    retrying AppleScript. If it cannot find the button, it will log the
+    available buttons for debugging.
+    """
+    applescript = """
+    on run argv
+        set process_name to "CoreServicesUIAgent"
+        
+        repeat 10 times
+            try
+                tell application "System Events"
+                    if exists process process_name then
+                        tell process process_name
+                            set frontmost to true
+                            if exists (window 1) then
+                                -- Try to click by expected name
+                                if exists (button "Use as Default" of window 1) then
+                                    click button "Use as Default" of window 1
+                                    return "SUCCESS"
+                                end if
+                                
+                                -- If that fails, log available buttons
+                                set btns to name of every button of window 1
+                                return "ERROR: Button 'Use as Default' not found. " & ¬
+                                    "Available: " & (btns as text)
+                            end if
+                        end tell
+                    end if
+                end tell
+            on error err_msg
+                return "ERROR: " & err_msg
+            end try
+            delay 0.5
+        end repeat
+        
+        return "ERROR: Process or window not found after 5 seconds."
+    end run
+    """
+
+    # Give the dialog a moment to appear
+    time.sleep(0.5)
+
+    try:
+        result = subprocess.run(
+            ["osascript", "-e", applescript], check=True, capture_output=True, text=True
+        )
+        output = result.stdout.strip()
+        if "SUCCESS" in output:
+            logger.info("Dialog confirmed.")
+            return True
+        else:
+            logger.error(f"Dialog automation failed: {output}")
+            return False
+    except subprocess.CalledProcessError as e:
+        logger.error(f"AppleScript execution failed: {e.stderr.strip()}")
+        return False
+</file>
+
+<file path="macdefaultbrowsy/launch_services.py">
+# macdefaultbrowsy/launch_services.py
+
+from LaunchServices import (
+    LSCopyAllHandlersForURLScheme,
+    LSCopyDefaultHandlerForURLScheme,
+    LSSetDefaultHandlerForURLScheme,
+)
+
+
+def get_all_handlers_for_scheme(scheme: str):
+    """
+    Get all registered handlers for a given URL scheme.
+    """
+    return LSCopyAllHandlersForURLScheme(scheme)
+
+
+def get_current_handler_for_scheme(scheme: str):
+    """
+    Get the current default handler for a given URL scheme.
+    """
+    return LSCopyDefaultHandlerForURLScheme(scheme)
+
+
+def set_default_handler_for_scheme(bundle_id: str, scheme: str):
+    """
+    Set the default handler for a given URL scheme.
+    """
+    result = LSSetDefaultHandlerForURLScheme(scheme, bundle_id)
+    # A non-zero result may be returned if a confirmation dialog is displayed,
+    # so we treat -10810 (kLSUnknownErr) as success in that case.
+    return result == 0 or result == -10810
+</file>
+
+<file path="macdefaultbrowsy/macdefaultbrowsy.py">
+# macdefaultbrowsy/macdefaultbrowsy.py
+
+from loguru import logger
+from . import launch_services, dialog_automation
+
+
+def _browser_name_from_bundle_id(bundle_id: str) -> str:
+    """
+    Extracts a user-friendly browser name from a bundle identifier.
+    Example: com.google.Chrome -> chrome
+    """
+    return bundle_id.split(".")[-1].lower()
+
+
+def _get_available_browsers() -> dict:
+    """
+    Returns a dictionary of available browsers, with browser name as key and bundle ID as value.
+    """
+    http_handlers = launch_services.get_all_handlers_for_scheme("http") or []
+    https_handlers = launch_services.get_all_handlers_for_scheme("https") or []
+
+    all_handlers = set(http_handlers) & set(https_handlers)
+
+    browsers = {}
+    for handler in all_handlers:
+        name = _browser_name_from_bundle_id(handler)
+        browsers[name] = handler
+
+    return browsers
+
+
+def read_default_browser() -> str | None:
+    """
+    Returns the name of the current default browser.
+    """
+    handler = launch_services.get_current_handler_for_scheme("http")
+    if handler:
+        return _browser_name_from_bundle_id(handler)
+    return None
+
+
+def set_default_browser(browser_id: str) -> bool:
+    """
+    Sets the default browser.
+    """
+    browsers = _get_available_browsers()
+    if browser_id not in browsers:
+        logger.error(f"Browser '{browser_id}' not found.")
+        return False
+
+    bundle_id = browsers[browser_id]
+
+    http_ok = launch_services.set_default_handler_for_scheme(bundle_id, "http")
+    https_ok = launch_services.set_default_handler_for_scheme(bundle_id, "https")
+
+    if http_ok and https_ok:
+        dialog_automation.confirm_dialog()
+        logger.info(f"Successfully set {browser_id} as default browser.")
+        return True
+
+    return False
+
+
+def list_browsers():
+    """
+    Lists all available browsers, marking the default with a *.
+    """
+    available_browsers = _get_available_browsers()
+    current_browser = read_default_browser()
+
+    for name in sorted(available_browsers.keys()):
+        if name == current_browser:
+            logger.info(f"* {name}")
+        else:
+            logger.info(f"  {name}")
+</file>
+
+<file path="macdefaultbrowsy.egg-info/dependency_links.txt">
+
+</file>
+
+<file path="macdefaultbrowsy.egg-info/entry_points.txt">
+[console_scripts]
+macdefaultbrowsy = macdefaultbrowsy.__main__:cli
+</file>
+
+<file path="macdefaultbrowsy.egg-info/PKG-INFO">
+Metadata-Version: 2.4
+Name: macdefaultbrowsy
+Version: 0.1.0
+Summary: A Python port of macdefaultbrowser to manage the default web browser on macOS.
+Author-email: Adam Twardoch <adam+github@twardoch.com>
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: MacOS
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+Requires-Dist: pyobjc-framework-CoreServices
+Requires-Dist: fire
+Requires-Dist: loguru
+
+# macdefaultbrowsy
+
+A Python port of the `macdefaultbrowser` tool to manage the default web browser on macOS.
+
+## Installation
+
+```bash
+pip install .
+```
+
+## Usage
+
+```bash
+macdefaultbrowsy
+```
+</file>
+
+<file path="macdefaultbrowsy.egg-info/requires.txt">
+pyobjc-framework-CoreServices
+fire
+loguru
+</file>
+
+<file path="macdefaultbrowsy.egg-info/SOURCES.txt">
+README.md
+pyproject.toml
+macdefaultbrowsy/__init__.py
+macdefaultbrowsy/__main__.py
+macdefaultbrowsy/dialog_automation.py
+macdefaultbrowsy/launch_services.py
+macdefaultbrowsy/macdefaultbrowsy.py
+macdefaultbrowsy.egg-info/PKG-INFO
+macdefaultbrowsy.egg-info/SOURCES.txt
+macdefaultbrowsy.egg-info/dependency_links.txt
+macdefaultbrowsy.egg-info/entry_points.txt
+macdefaultbrowsy.egg-info/requires.txt
+macdefaultbrowsy.egg-info/top_level.txt
+tests/test_browser_manager.py
+</file>
+
+<file path="macdefaultbrowsy.egg-info/top_level.txt">
+macdefaultbrowsy
+</file>
+
+<file path="tests/test_browser_manager.py">
+# tests/test_browser_manager.py
+
+from unittest import mock
+from macdefaultbrowsy.macdefaultbrowsy import browser_manager
+
+
+@mock.patch(
+    "macdefaultbrowsy.macdefaultbrowsy.launch_services.get_all_handlers_for_scheme"
+)
+def test_get_available_browsers(mock_get_all_handlers):
+    mock_get_all_handlers.side_effect = [
+        ["com.apple.Safari", "com.google.Chrome"],
+        ["com.apple.Safari", "com.google.Chrome", "org.mozilla.firefox"],
+    ]
+
+    browsers = browser_manager.get_available_browsers()
+
+    assert "safari" in browsers
+    assert "chrome" in browsers
+    assert "firefox" not in browsers  # It's not a handler for both http and https
+    assert browsers["safari"] == "com.apple.Safari"
+
+
+@mock.patch(
+    "macdefaultbrowsy.macdefaultbrowsy.launch_services.get_current_handler_for_scheme"
+)
+def test_get_current_default_browser(mock_get_current_handler):
+    mock_get_current_handler.return_value = "com.apple.Safari"
+
+    browser = browser_manager.get_current_default_browser()
+
+    assert browser == "safari"
+
+
+@mock.patch("macdefaultbrowsy.macdefaultbrowsy.browser_manager.get_available_browsers")
+@mock.patch(
+    "macdefaultbrowsy.macdefaultbrowsy.launch_services.set_default_handler_for_scheme"
+)
+def test_set_default_browser(mock_set_handler, mock_get_browsers):
+    mock_get_browsers.return_value = {"safari": "com.apple.Safari"}
+    mock_set_handler.return_value = True  # Success
+
+    success = browser_manager.set_default_browser("safari")
+
+    assert success
+    mock_set_handler.assert_any_call("com.apple.Safari", "http")
+    mock_set_handler.assert_any_call("com.apple.Safari", "https")
+</file>
+
+<file path="pyproject.toml">
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "macdefaultbrowsy"
+version = "0.1.0"
+authors = [
+  { name="Adam Twardoch", email="adam+github@twardoch.com" },
+]
+description = "A Python port of macdefaultbrowser to manage the default web browser on macOS."
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS",
+]
+dependencies = [
+    "pyobjc-framework-CoreServices",
+    "fire",
+    "loguru",
+]
+
+[project.scripts]
+macdefaultbrowsy = "macdefaultbrowsy.__main__:cli"
+</file>
+
+<file path="README.md">
+# macdefaultbrowsy
+
+A Python port of the `macdefaultbrowser` tool to manage the default web browser on macOS.
+
+## Installation
+
+```bash
+pip install .
+```
+
+## Usage
+
+```bash
+macdefaultbrowsy
+```
+</file>
+
+</files>
