@@ -4,16 +4,14 @@ from unittest import mock
 from macdefaultbrowsy.macdefaultbrowsy import browser_manager
 
 
-@mock.patch(
-    "macdefaultbrowsy.macdefaultbrowsy.launch_services.get_all_handlers_for_scheme"
-)
-def testget_available_browsers(mock_get_all_handlers):
+@mock.patch("macdefaultbrowsy.macdefaultbrowsy.launch_services.get_all_handlers_for_scheme")
+def testget_browsers(mock_get_all_handlers):
     mock_get_all_handlers.side_effect = [
         ["com.apple.Safari", "com.google.Chrome"],
         ["com.apple.Safari", "com.google.Chrome", "org.mozilla.firefox"],
     ]
 
-    browsers = browser_manager.get_available_browsers()
+    browsers = browser_manager.get_browsers()
 
     assert "safari" in browsers
     assert "chrome" in browsers
@@ -21,9 +19,7 @@ def testget_available_browsers(mock_get_all_handlers):
     assert browsers["safari"] == "com.apple.Safari"
 
 
-@mock.patch(
-    "macdefaultbrowsy.macdefaultbrowsy.launch_services.get_current_handler_for_scheme"
-)
+@mock.patch("macdefaultbrowsy.macdefaultbrowsy.launch_services.get_current_handler_for_scheme")
 def test_get_current_default_browser(mock_get_current_handler):
     mock_get_current_handler.return_value = "com.apple.Safari"
 
@@ -32,10 +28,8 @@ def test_get_current_default_browser(mock_get_current_handler):
     assert browser == "safari"
 
 
-@mock.patch("macdefaultbrowsy.macdefaultbrowsy.browser_manager.get_available_browsers")
-@mock.patch(
-    "macdefaultbrowsy.macdefaultbrowsy.launch_services.set_default_handler_for_scheme"
-)
+@mock.patch("macdefaultbrowsy.macdefaultbrowsy.browser_manager.get_browsers")
+@mock.patch("macdefaultbrowsy.macdefaultbrowsy.launch_services.set_default_handler_for_scheme")
 def test_set_default_browser(mock_set_handler, mock_get_browsers):
     mock_get_browsers.return_value = {"safari": "com.apple.Safari"}
     mock_set_handler.return_value = True  # Success

@@ -59,7 +59,7 @@ current = macdefaultbrowsy.get_default_browser()
 print(f"Current default browser: {current}")
 
 # List all available browsers
-browsers = macdefaultbrowsy.get_available_browsers()
+browsers = macdefaultbrowsy.get_browsers()
 print("Available browsers:")
 for name in sorted(browsers.keys()):
     print(f"  {name}")

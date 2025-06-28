@@ -787,7 +787,7 @@ adam@Hamlet macdefaultbrowsy %
 +     First checks if the browser is already the default to avoid hanging
 +     when no confirmation dialog appears.
       """
-      browsers = get_available_browsers()
+      browsers = get_browsers()
 ```
 
 ```diff
