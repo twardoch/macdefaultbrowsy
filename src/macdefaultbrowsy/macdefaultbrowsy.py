@@ -14,7 +14,7 @@ def _browser_name_from_bundle_id(bundle_id: str) -> str:
     return bundle_id.split(".")[-1].lower()
 
 
-def _get_available_browsers() -> dict:
+def get_available_browsers() -> dict:
     """
     Returns dict of available browsers: {browser_name: bundle_id}.
     """
@@ -48,7 +48,7 @@ def set_default_browser(browser_id: str) -> bool:
     First checks if the browser is already the default to avoid hanging
     when no confirmation dialog appears.
     """
-    browsers = _get_available_browsers()
+    browsers = get_available_browsers()
     if browser_id not in browsers:
         logger.error(f"Browser '{browser_id}' not found.")
         return False
@@ -83,7 +83,7 @@ def list_browsers() -> None:
     """
     Lists all available browsers, marking the default with a *.
     """
-    available_browsers = _get_available_browsers()
+    available_browsers = get_available_browsers()
     current_browser = read_default_browser()
 
     for name in sorted(available_browsers.keys()):

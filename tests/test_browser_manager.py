@@ -7,7 +7,7 @@ from macdefaultbrowsy.macdefaultbrowsy import browser_manager
 @mock.patch(
     "macdefaultbrowsy.macdefaultbrowsy.launch_services.get_all_handlers_for_scheme"
 )
-def test_get_available_browsers(mock_get_all_handlers):
+def testget_available_browsers(mock_get_all_handlers):
     mock_get_all_handlers.side_effect = [
         ["com.apple.Safari", "com.google.Chrome"],
         ["com.apple.Safari", "com.google.Chrome", "org.mozilla.firefox"],
