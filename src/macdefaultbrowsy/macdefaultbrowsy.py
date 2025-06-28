@@ -31,7 +31,7 @@ def get_available_browsers() -> dict:
     return browsers
 
 
-def read_default_browser() -> str | None:
+def get_default_browser() -> str | None:
     """
     Returns the name of the current default browser.
     """
@@ -54,7 +54,7 @@ def set_default_browser(browser_id: str) -> bool:
         return False
 
     # Check if the browser is already the default
-    current_browser = read_default_browser()
+    current_browser = get_default_browser()
     if current_browser == browser_id:
         logger.info(f"{browser_id} is already the default browser.")
         return True
@@ -84,7 +84,7 @@ def print_browsers_list() -> None:
     Lists all available browsers, marking the default with a *.
     """
     available_browsers = get_available_browsers()
-    current_browser = read_default_browser()
+    current_browser = get_default_browser()
 
     for name in sorted(available_browsers.keys()):
         if name == current_browser:

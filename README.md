@@ -55,7 +55,7 @@ The tool will automatically set Chrome as your default browser and confirm the s
 from macdefaultbrowsy import macdefaultbrowsy
 
 # Get the current default browser
-current = macdefaultbrowsy.read_default_browser()
+current = macdefaultbrowsy.get_default_browser()
 print(f"Current default browser: {current}")
 
 # List all available browsers
