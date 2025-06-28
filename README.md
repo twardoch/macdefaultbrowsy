@@ -25,7 +25,9 @@ pip install git+https://github.com/twardoch/macdefaultbrowsy
 
 ## Usage
 
-### List all browsers
+### Command Line
+
+#### List all browsers
 
 ```bash
 macdefaultbrowsy
@@ -39,13 +41,36 @@ Output example:
   edge
 ```
 
-### Set default browser
+#### Set default browser
 
 ```bash
 macdefaultbrowsy chrome
 ```
 
 The tool will automatically set Chrome as your default browser and confirm the system dialog.
+
+### Python API
+
+```python
+from macdefaultbrowsy import macdefaultbrowsy
+
+# Get the current default browser
+current = macdefaultbrowsy.read_default_browser()
+print(f"Current default browser: {current}")
+
+# List all available browsers
+browsers = macdefaultbrowsy._get_available_browsers()
+print("Available browsers:")
+for name in sorted(browsers.keys()):
+    print(f"  {name}")
+
+# Set a new default browser
+success = macdefaultbrowsy.set_default_browser("chrome")
+if success:
+    print("Successfully set Chrome as default browser")
+else:
+    print("Failed to set default browser")
+```
 
 
 ## How it Works
