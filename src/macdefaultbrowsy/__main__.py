@@ -20,7 +20,7 @@ def cli(browser_id: str | None = None):
     if browser_id:
         macdefaultbrowsy.set_default_browser(browser_id)
     else:
-        macdefaultbrowsy.list_browsers()
+        macdefaultbrowsy.print_browsers_list()
 
 
 if __name__ == "__main__":

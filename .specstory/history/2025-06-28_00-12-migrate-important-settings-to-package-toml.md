@@ -822,8 +822,8 @@ adam@Hamlet macdefaultbrowsy %
 ```diff
   
   
-- def list_browsers():
-+ def list_browsers() -> None:
+- def print_browsers_list():
++ def print_browsers_list() -> None:
       """
       Lists all available browsers, marking the default with a *.
 ```
@@ -888,7 +888,7 @@ Perfect! I have successfully fixed the hanging issue with `macdefaultbrowsy`. He
 - Added early return check in `set_default_browser()` function
 - Enhanced docstring to explain the hanging prevention
 - Fixed line length issues for code standards compliance  
-- Added proper return type annotation for `list_browsers()`
+- Added proper return type annotation for `print_browsers_list()`
 - Added `this_file` comment for path tracking per repo rules
 
 The fix is minimal, focused, and preserves all existing functionality while eliminating the hanging behavior. The tool now handles the edge case gracefully and provides clear user feedback.

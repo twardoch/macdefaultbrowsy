@@ -79,7 +79,7 @@ def set_default_browser(browser_id: str) -> bool:
     return False
 
 
-def list_browsers() -> None:
+def print_browsers_list() -> None:
     """
     Lists all available browsers, marking the default with a *.
     """
